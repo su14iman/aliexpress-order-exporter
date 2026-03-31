@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { width: 450px; font-family: sans-serif; padding: 15px; }
+        h2 { color: #ff4747; font-size: 18px; border-bottom: 2px solid #eee; padding-bottom: 5px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: right; }
+        th { background-color: #f4f4f4; }
+        .btn-container { margin-top: 15px; display: flex; gap: 10px; }
+        button { flex: 1; padding: 10px; cursor: pointer; border: none; border-radius: 4px; font-weight: bold; }
+        #extract { background: #ff4747; color: white; }
+        #downloadCSV { background: #27ae60; color: white; }
+    </style>
+</head>
+<body>
+    <h2>AliExpress Order History</h2>
+    <div class="btn-container">
+        <button id="extract">Extract Data</button>
+        <button id="downloadCSV">Download Excel (CSV)</button>
+    </div>
+    <div id="results">
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Product</th>
+                    <th>Date</th>
+                    <th>Price</th>
+                    <th>Invoice</th>
+                </tr>
+            </thead>
+            <tbody id="orderTable"></tbody>
+        </table>
+    </div>
+    <script src="popup.js"></script>
+</body>
+</html>
