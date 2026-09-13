@@ -33,13 +33,40 @@ document.getElementById('extract').addEventListener('click', async () => {
 function renderTable() {
     const tableBody = document.getElementById('orderTable');
     tableBody.innerHTML = '';
+    
+    if (extractedData.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="10" class="loading-text">Fetching data...</td></tr>';
+        return;
+    }
+
     extractedData.forEach((order, index) => {
-        tableBody.innerHTML += `<tr>
-            <td>${index + 1}</td> <td title="${order.title}">${order.title.substring(0, 30)}...</td>
-            <td>${order.date}</td>
-            <td>${order.price}</td>
-            <td><a href="${order.detailsLink}" target="_blank">open</a></td>
-        </tr>`;
+        tableBody.innerHTML += `
+            <tr>
+                <td><span class="badge">${index + 1}</span></td>
+                <td>
+                    ${order.imageUrl ? 
+                        `<a href="${order.imageUrl}" target="_blank">
+                            <img src="${order.imageUrl}" class="img-preview" alt="product">
+                         </a>` : 
+                        '<span>-</span>'}
+                </td>
+                <td style="font-weight: bold;">${order.orderId}</td>
+                <td>${order.itemId}</td>
+                <td>${order.storeName}</td>
+                <td class="product-cell" title="${order.title}">
+                    <div style="font-weight: 500;">${order.title.substring(0, 35)}...</div>
+                    <span class="sku-text">Detail: ${order.sku || 'N/A'}</span>
+                </td>
+                <td>${order.date}</td>
+                <td style="color: #666;">${order.unitPrice}</td>
+                <td><span class="badge">x${order.quantity}</span></td>
+                <td style="font-weight: bold; color: #ff4747;">${order.price}</td>
+                <td>
+                    <a href="${order.detailsLink}" target="_blank" class="invoice-link">
+                        📄 Open
+                    </a>
+                </td>
+            </tr>`;
     });
 }
 
@@ -76,15 +103,62 @@ function scrapeBasicInfo() {
         }
 
         // 2. Build the direct invoice link (inside the iframe)
-        const directInvoiceLink = orderId ? 
+        const directInvoiceLink = orderId ?
             `https://www.aliexpress.com/p/tax-ui/index.html?isGrayMatch=false&orderId=${orderId}` : 
             "#";
 
+        // 3. get Image
+        const imageStyle = item.querySelector('.order-item-content-img')?.style.backgroundImage || "";
+        const imageUrlMatch = imageStyle.match(/url\("?(.*?)"?\)/);
+        const imageUrl = imageUrlMatch ? imageUrlMatch[1] : "";
+
+        // 4. get single price and quantity (if available) - .order-item-content-info-number
+        const numberContainer = item.querySelector('.order-item-content-info-number');
+        let unitPrice = "0";
+        let quantity = "1";
+        if (numberContainer) {
+            const qEl = numberContainer.querySelector('.order-item-content-info-number-quantity');
+            if (qEl) quantity = qEl.innerText.replace('x', '').trim();
+
+            const priceWrap = numberContainer.querySelector('[class*="es--wrap"]');
+            if (priceWrap) {
+                unitPrice = priceWrap.innerText.replace(/€|\s/g, '').replace(',', '.').trim();
+            }
+        }
+
+        // 5. Extract store name (optional, for better context) - .order-item-store-name span
+        const storeNameEl = item.querySelector('.order-item-store-name span');
+        const storeName = storeNameEl ? storeNameEl.innerText.trim() : "Unknown Store";
+
+        // 6. Extract SKU or product options (optional, for better context) - .order-item-content-info-sku
+        const skuEl = item.querySelector('.order-item-content-info-sku');
+        const sku = skuEl ? skuEl.innerText.trim() : "";
+
+        // 7. Product link - .order-item-content-body a
+        const productLinkEl = item.querySelector('.order-item-content-body a');
+        const productLink = productLinkEl ? productLinkEl.href : "";
+
+        // 8. ItemID
+        let itemId = "";
+        if (productLink) {
+            const itemIdMatch = productLink.match(/item\/(\d+)\.html/);
+            if (itemIdMatch && itemIdMatch[1]) {
+                itemId = itemIdMatch[1];
+            }
+        }
+
         return {
             date: formattedDate,
+            itemId: itemId,
+            orderId: orderId,
             price: item.querySelector('.order-item-content-opt-price-total')?.innerText.replace(/Gesamt:|Insgesamt:|€/g, '').trim(),
+            unitPrice: unitPrice,
+            quantity: quantity,
+            storeName: storeName,
+            sku: sku,
             detailsLink: directInvoiceLink, // direct link to the invoice page (which contains the English title)
-            productLink: item.querySelector('.order-item-content-body a')?.href
+            productLink: productLink, // link to the product page (used to fetch the English title in the background)
+            imageUrl: imageUrl
         };
     });
 }
@@ -93,9 +167,9 @@ function scrapeBasicInfo() {
 document.getElementById('downloadCSV').addEventListener('click', () => {
     if (extractedData.length === 0) return alert("Get the orders first by clicking 'Extract Orders'.");
 
-    let csvContent = "data:text/csv;charset=utf-8,Product,Date,Price,InvoiceURL\n";
+    let csvContent = "data:text/csv;charset=utf-8,orderId,itemId,Product,Date,Unit Price,Quantity,Price,Store Name,SKU, InvoiceURL,ImageUrl\n";
     extractedData.forEach(row => {
-        csvContent += `"${row.title}","${row.date}","${row.price}","${row.detailsLink}"\n`;
+        csvContent += `"${row.orderId}","${row.itemId}","${row.title}","${row.date}","${row.unitPrice}","${row.quantity}","${row.price}","${row.storeName}","${row.sku}","${row.detailsLink}","${row.imageUrl}"\n`;
     });
 
     const encodedUri = encodeURI(csvContent);

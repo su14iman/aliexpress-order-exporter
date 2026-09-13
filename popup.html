@@ -1,39 +1,184 @@
 <!DOCTYPE html>
-<html dir="rtl">
+<html dir="ltr" lang="en">
 <head>
     <meta charset="UTF-8">
     <style>
-        body { width: 450px; font-family: sans-serif; padding: 15px; }
-        h2 { color: #ff4747; font-size: 18px; border-bottom: 2px solid #eee; padding-bottom: 5px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: right; }
-        th { background-color: #f4f4f4; }
-        .btn-container { margin-top: 15px; display: flex; gap: 10px; }
-        button { flex: 1; padding: 10px; cursor: pointer; border: none; border-radius: 4px; font-weight: bold; }
-        #extract { background: #ff4747; color: white; }
-        #downloadCSV { background: #27ae60; color: white; }
+        :root {
+            --ali-red: #FF4747;
+            --ali-dark: #191919;
+            --success-green: #27ae60;
+            --gray-bg: #f8f9fa;
+        }
+
+        body { 
+            /* width: 1000px;  */
+            width: 100%;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            padding: 20px; 
+            background-color: #fff;
+            color: var(--ali-dark);
+            margin: 0;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 2px solid var(--gray-bg);
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+
+        h2 { 
+            margin: 0;
+            color: var(--ali-red); 
+            font-size: 20px; 
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-container { 
+            display: flex; 
+            gap: 12px; 
+        }
+
+        button { 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 20px; 
+            cursor: pointer; 
+            border: none; 
+            border-radius: 6px; 
+            font-weight: 600; 
+            transition: all 0.3s ease;
+            font-size: 13px;
+        }
+
+        #extract { 
+            background: var(--ali-red); 
+            color: white; 
+        }
+
+        #extract:hover { background: #e03636; transform: translateY(-1px); }
+
+        #downloadCSV { 
+            background: var(--success-green); 
+            color: white; 
+        }
+
+        #downloadCSV:hover { background: #219150; transform: translateY(-1px); }
+
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            background: white;
+        }
+
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            font-size: 12px; 
+            min-width: 900px;
+        }
+
+        th, td { 
+            padding: 12px 10px; 
+            text-align: center; 
+            border-bottom: 1px solid #eee;
+        }
+
+        th { 
+            background-color: var(--gray-bg); 
+            color: #666;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 11px;
+        }
+
+        tr:hover { background-color: #fffafb; }
+
+        .product-cell {
+            text-align: right;
+            max-width: 200px;
+        }
+
+        .sku-text {
+            color: #888;
+            font-size: 10px;
+            display: block;
+            margin-top: 4px;
+        }
+
+        .img-preview {
+            width: 40px;
+            height: 40px;
+            border-radius: 4px;
+            object-fit: cover;
+            border: 1px solid #ddd;
+        }
+
+        .badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            background: #eee;
+            font-size: 10px;
+            font-weight: bold;
+        }
+
+        .invoice-link {
+            color: #3498db;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .invoice-link:hover { text-decoration: underline; }
+
+        .loading-text {
+            text-align: center;
+            padding: 20px;
+            color: #888;
+            font-style: italic;
+        }
     </style>
 </head>
 <body>
-    <h2>AliExpress Order History</h2>
-    <div class="btn-container">
-        <button id="extract">Extract Data</button>
-        <button id="downloadCSV">Download Excel (CSV)</button>
-    </div>
-    <div id="results">
+    <header>
+        <h2>📦 AliExpress Order Master</h2>
+        <div class="btn-container">
+            <button id="extract">🚀 Fetch Data</button>
+            <button id="downloadCSV">📊 Download Excel</button>
+        </div>
+    </header>
+
+    <div class="table-wrapper">
         <table>
             <thead>
                 <tr>
                     <th>#</th>
-                    <th>Product</th>
+                    <th>Image</th>
+                    <th>Order ID</th>
+                    <th>Item ID</th>
+                    <th>Store</th>
+                    <th>Product & Details</th>
                     <th>Date</th>
-                    <th>Price</th>
+                    <th>Unit Price</th>
+                    <th>Quantity</th>
+                    <th>Total</th>
                     <th>Invoice</th>
                 </tr>
             </thead>
-            <tbody id="orderTable"></tbody>
+            <tbody id="orderTable">
+                <tr>
+                    <td colspan="10" class="loading-text">Click "Fetch Data" to start...</td>
+                </tr>
+            </tbody>
         </table>
     </div>
+
     <script src="popup.js"></script>
 </body>
 </html>

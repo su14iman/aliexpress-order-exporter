@@ -3,7 +3,12 @@
     "name": "AliExpress Order Exporter",
     "description": "Export your AliExpress orders with direct invoice links.",
     "version": "1.0",
-    "permissions": ["activeTab", "scripting"],
+    "permissions": [
+        "activeTab",
+        "scripting",
+        "downloads",
+        "storage"
+    ],
     "host_permissions": ["https://*.aliexpress.com/*"],
     "background": {
         "service_worker": "background.js"
