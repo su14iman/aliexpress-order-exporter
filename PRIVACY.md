@@ -1,8 +1,8 @@
-# Privacy Policy for AliExpress Order Master
+# Privacy Policy for AliExpress Order exporter
 
 **Effective Date: March 31, 2026**
 
-This privacy policy governs your use of the "AliExpress Order Master" Chrome extension.
+This privacy policy governs your use of the "AliExpress Order exporter" Chrome extension.
 
 ### 1. Data Collection and Usage
 - **Local Processing:** The extension processes all data locally on your device.
