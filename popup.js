@@ -1,5 +1,8 @@
 let extractedData = [];
 
+setupSelectAll('selectAll');
+initImageLightbox();
+
 document.getElementById('extract').addEventListener('click', async () => {
     let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
@@ -10,7 +13,7 @@ document.getElementById('extract').addEventListener('click', async () => {
         if (results && results[0].result) {
             const basicOrders = results[0].result;
             const tableBody = document.getElementById('orderTable');
-            tableBody.innerHTML = '<tr><td colspan="4">Fetching English titles...</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="12">Fetching English titles...</td></tr>';
 
             extractedData = [];
 
@@ -24,51 +27,12 @@ document.getElementById('extract').addEventListener('click', async () => {
                 extractedData.push(order);
 
                 // Update the table immediately after each order is processed
-                renderTable();
+                renderOrderTable('orderTable', extractedData);
+                chrome.storage.local.set({ extractedData });
             }
         }
     });
 });
-
-function renderTable() {
-    const tableBody = document.getElementById('orderTable');
-    tableBody.innerHTML = '';
-    
-    if (extractedData.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="10" class="loading-text">Fetching data...</td></tr>';
-        return;
-    }
-
-    extractedData.forEach((order, index) => {
-        tableBody.innerHTML += `
-            <tr>
-                <td><span class="badge">${index + 1}</span></td>
-                <td>
-                    ${order.imageUrl ? 
-                        `<a href="${order.imageUrl}" target="_blank">
-                            <img src="${order.imageUrl}" class="img-preview" alt="product">
-                         </a>` : 
-                        '<span>-</span>'}
-                </td>
-                <td style="font-weight: bold;">${order.orderId}</td>
-                <td>${order.itemId}</td>
-                <td>${order.storeName}</td>
-                <td class="product-cell" title="${order.title}">
-                    <div style="font-weight: 500;">${order.title.substring(0, 35)}...</div>
-                    <span class="sku-text">Detail: ${order.sku || 'N/A'}</span>
-                </td>
-                <td>${order.date}</td>
-                <td style="color: #666;">${order.unitPrice}</td>
-                <td><span class="badge">x${order.quantity}</span></td>
-                <td style="font-weight: bold; color: #ff4747;">${order.price}</td>
-                <td>
-                    <a href="${order.detailsLink}" target="_blank" class="invoice-link">
-                        📄 Open
-                    </a>
-                </td>
-            </tr>`;
-    });
-}
 
 // Function to scrape basic order info (date, price, links) from the AliExpress orders page
 function scrapeBasicInfo() {
@@ -104,7 +68,7 @@ function scrapeBasicInfo() {
 
         // 2. Build the direct invoice link (inside the iframe)
         const directInvoiceLink = orderId ?
-            `https://www.aliexpress.com/p/tax-ui/index.html?isGrayMatch=false&orderId=${orderId}` : 
+            `https://www.aliexpress.com/p/tax-ui/index.html?isGrayMatch=false&orderId=${orderId}` :
             "#";
 
         // 3. get Image
@@ -163,19 +127,12 @@ function scrapeBasicInfo() {
     });
 }
 
-
 document.getElementById('downloadCSV').addEventListener('click', () => {
     if (extractedData.length === 0) return alert("Get the orders first by clicking 'Extract Orders'.");
+    downloadCsv(getSelectedData(extractedData));
+});
 
-    let csvContent = "data:text/csv;charset=utf-8,orderId,itemId,Product,Date,Unit Price,Quantity,Price,Store Name,SKU, InvoiceURL,ImageUrl\n";
-    extractedData.forEach(row => {
-        csvContent += `"${row.orderId}","${row.itemId}","${row.title}","${row.date}","${row.unitPrice}","${row.quantity}","${row.price}","${row.storeName}","${row.sku}","${row.detailsLink}","${row.imageUrl}"\n`;
-    });
-
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `AliExpress_Orders_${new Date().toLocaleDateString()}.csv`);
-    document.body.appendChild(link);
-    link.click();
+document.getElementById('openFullPage').addEventListener('click', async () => {
+    await chrome.storage.local.set({ extractedData });
+    chrome.tabs.create({ url: chrome.runtime.getURL('viewer.html') });
 });
