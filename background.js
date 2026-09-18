@@ -61,29 +61,46 @@ async function navigateTab(tabId, url) {
     await done;
 }
 
-async function waitForInvoiceRender(tabId, timeout = 15000) {
+// A >50-char check alone can fire while the page still shows a loading
+// spinner (surrounding labels/skeleton text already clear that bar). Instead,
+// require the rendered text to stop changing for a few consecutive polls
+// (i.e. the SPA has actually finished swapping the spinner for real content),
+// then add extra settle time before printing.
+async function waitForInvoiceRender(tabId, timeout = 25000) {
     const start = Date.now();
+    let lastText = null;
+    let stableCount = 0;
+
     while (Date.now() - start < timeout) {
-        let hasContent = false;
+        let text = "";
         try {
             const results = await chrome.scripting.executeScript({
                 target: { tabId },
                 func: () => {
                     const root = document.getElementById("root");
-                    return !!(root && root.innerText && root.innerText.trim().length > 50);
+                    return root && root.innerText ? root.innerText.trim() : "";
                 }
             });
-            hasContent = !!(results && results[0] && results[0].result);
+            text = (results && results[0] && results[0].result) || "";
         } catch (err) {
-            hasContent = false;
+            text = "";
         }
-        if (hasContent) {
-            // give fonts/images a moment to settle before printing
-            await new Promise((r) => setTimeout(r, 600));
+
+        const looksLoaded = text.length > 150;
+        stableCount = (looksLoaded && text === lastText) ? stableCount + 1 : 0;
+        lastText = text;
+
+        if (stableCount >= 3) {
+            // give fonts/images a moment to fully settle before printing
+            await new Promise((r) => setTimeout(r, 1500));
             return true;
         }
-        await new Promise((r) => setTimeout(r, 400));
+
+        await new Promise((r) => setTimeout(r, 500));
     }
+
+    // timed out — still give it one last buffer rather than printing immediately
+    await new Promise((r) => setTimeout(r, 1500));
     return false;
 }
 
