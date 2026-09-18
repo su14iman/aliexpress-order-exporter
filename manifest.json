@@ -2,12 +2,13 @@
     "manifest_version": 3,
     "name": "AliExpress Order Exporter",
     "description": "Export your AliExpress orders with direct invoice links.",
-    "version": "1.0",
+    "version": "1.1",
     "permissions": [
         "activeTab",
         "scripting",
         "downloads",
-        "storage"
+        "storage",
+        "debugger"
     ],
     "host_permissions": ["https://*.aliexpress.com/*"],
     "background": {

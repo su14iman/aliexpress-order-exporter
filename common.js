@@ -80,6 +80,46 @@ function downloadCsv(data) {
     link.remove();
 }
 
+function requestInvoiceDownload(orders) {
+    if (!orders || orders.length === 0) {
+        alert("Select at least one item to download invoices for.");
+        return;
+    }
+    const payload = orders
+        .filter(o => o.orderId && o.detailsLink && o.detailsLink !== '#')
+        .map(o => ({ orderId: o.orderId, detailsLink: o.detailsLink }));
+
+    if (payload.length === 0) {
+        alert("No valid invoice links found in the selection.");
+        return;
+    }
+    chrome.runtime.sendMessage({ action: "downloadInvoices", orders: payload });
+}
+
+function setupInvoiceProgressListener(statusId) {
+    const statusEl = document.getElementById(statusId);
+    if (!statusEl) return;
+
+    chrome.runtime.onMessage.addListener((request) => {
+        if (request.action !== "invoiceProgress") return;
+        const { index, total, orderId, status, error } = request.payload;
+
+        if (status === "opening") {
+            statusEl.textContent = `(${index + 1}/${total}) Opening invoice ${orderId}...`;
+        } else if (status === "printing") {
+            statusEl.textContent = `(${index + 1}/${total}) Saving invoice ${orderId} as PDF...`;
+        } else if (status === "done") {
+            statusEl.textContent = `(${index + 1}/${total}) Saved invoice ${orderId}.`;
+        } else if (status === "zipping") {
+            statusEl.textContent = `Packing ${total} invoice(s) into a ZIP file...`;
+        } else if (status === "error") {
+            statusEl.textContent = `(${index + 1}/${total}) Error on invoice ${orderId || ''}: ${error}`;
+        } else if (status === "finished") {
+            statusEl.textContent = `Done. Processed ${total} invoice(s) — check your ZIP download.`;
+        }
+    });
+}
+
 function initImageLightbox() {
     let overlay = document.getElementById('imgLightbox');
     if (!overlay) {

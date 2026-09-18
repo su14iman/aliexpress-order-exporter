@@ -2,6 +2,7 @@ let extractedData = [];
 
 setupSelectAll('selectAll');
 initImageLightbox();
+setupInvoiceProgressListener('invoiceStatus');
 
 document.getElementById('extract').addEventListener('click', async () => {
     let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -130,6 +131,11 @@ function scrapeBasicInfo() {
 document.getElementById('downloadCSV').addEventListener('click', () => {
     if (extractedData.length === 0) return alert("Get the orders first by clicking 'Extract Orders'.");
     downloadCsv(getSelectedData(extractedData));
+});
+
+document.getElementById('downloadInvoices').addEventListener('click', () => {
+    if (extractedData.length === 0) return alert("Get the orders first by clicking 'Extract Orders'.");
+    requestInvoiceDownload(getSelectedData(extractedData));
 });
 
 document.getElementById('openFullPage').addEventListener('click', async () => {

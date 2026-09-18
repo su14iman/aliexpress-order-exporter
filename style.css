@@ -76,6 +76,21 @@ button {
 
 #openFullPage:hover { background: #eee; transform: translateY(-1px); }
 
+#downloadInvoices {
+    background: var(--ali-dark);
+    color: white;
+}
+
+#downloadInvoices:hover { background: #333; transform: translateY(-1px); }
+
+.invoice-status {
+    min-height: 18px;
+    margin: -10px 0 15px;
+    font-size: 12px;
+    color: #666;
+    font-style: italic;
+}
+
 .table-wrapper {
     overflow-x: auto;
     border-radius: 8px;
